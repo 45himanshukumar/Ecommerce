@@ -1,5 +1,6 @@
 package com.ecommerce.sb_ecom.Controller;
 
+import com.ecommerce.sb_ecom.Configure.AppConstant;
 import com.ecommerce.sb_ecom.Model.Category;
 import com.ecommerce.sb_ecom.Payload.CategoryDTO;
 import com.ecommerce.sb_ecom.Payload.CategoryResponce;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 @RestController
-public class categorycontroller {
+public class  categorycontroller {
 
     private CategoryService categoryService;
    // private Long nextid=1L;
@@ -21,8 +22,13 @@ public class categorycontroller {
         this.categoryService = categoryService;
     }
     @GetMapping("api/public/categories")
-    public ResponseEntity<CategoryResponce> getAllcategory(){
-        CategoryResponce categoryResponce=categoryService.getAllcategories();
+    public ResponseEntity<CategoryResponce> getAllcategory(@RequestParam(name = "pageNumber",defaultValue = AppConstant.PAGE_NUMBER,required = false ) Integer pageNumber
+            ,@RequestParam(name="pageSize" ,defaultValue = AppConstant.PAGE_SIZE ,required = false) Integer pageSize
+            ,@RequestParam(name="SortBy" ,defaultValue = AppConstant.SORT_CATEGORY_BY,required = false) String sortBy
+             ,@RequestParam(name="sortOrder" ,defaultValue = AppConstant.SORT_DIR,required = false) String sortorder
+    )
+    {
+        CategoryResponce categoryResponce=categoryService.getAllcategories(pageNumber, pageSize,sortBy,sortorder);
         return  new ResponseEntity<>(categoryResponce,HttpStatus.OK);
     }
     @PostMapping("api/public/categories")
@@ -33,10 +39,10 @@ public class categorycontroller {
         return  new ResponseEntity<>(savedCategoryDto,HttpStatus.CREATED);
     }
     @DeleteMapping("api/admin/categories/{categoryId}")
-    public ResponseEntity<String> Deletecategory(@PathVariable Long categoryId){
+    public ResponseEntity<CategoryDTO> Deletecategory(@PathVariable Long categoryId){
         //try {
-            String status = categoryService.deletecategory(categoryId);
-            return new ResponseEntity<>(status, HttpStatus.OK);
+            CategoryDTO deletedCategory = categoryService.deletecategory(categoryId);
+            return new ResponseEntity<>(deletedCategory, HttpStatus.OK);
        // }catch (ResponseStatusException e){
           //  return new ResponseEntity<>(e.getReason(),e.getStatusCode());
        // }

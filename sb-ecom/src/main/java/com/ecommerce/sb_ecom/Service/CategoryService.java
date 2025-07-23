@@ -7,10 +7,10 @@ import com.ecommerce.sb_ecom.Payload.CategoryResponce;
 
 
 public interface CategoryService {
-    CategoryResponce getAllcategories();
+    CategoryResponce getAllcategories(Integer pageNumber,Integer pageSize,String sortBy,String sortOrder);
     CategoryDTO createCategory(CategoryDTO categoryDTO);
 
-    String deletecategory(Long categoryId);
+    CategoryDTO deletecategory(Long categoryId);
 
     CategoryDTO updatecategory(CategoryDTO categoryDTO,Long categoryId);
 }

@@ -8,6 +8,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Entity(name="categories")
 @Data
 @NoArgsConstructor
@@ -20,5 +22,6 @@ public class Category {
     @Size(min = 5,message="category must be contain at least 5 character")
     private String categoryName;
 
-
+    @OneToMany(mappedBy = "category",cascade =CascadeType.ALL)
+      private List<Product> products;
 }
