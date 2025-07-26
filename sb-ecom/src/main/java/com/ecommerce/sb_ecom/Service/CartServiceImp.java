@@ -101,10 +101,14 @@ public class CartServiceImp implements CartService {
             throw new APIException("No Cart Exist");
         }
         List<CartDTO> cartDTOS=carts.stream()
-                .map(cart->{
-                    CartDTO cartDTO=modelMapper.map(cart,CartDTO.class);
-                    List<ProductDTO>products=cart.getCartItems().stream().map(p->modelMapper.map(p.getProduct(),ProductDTO.class))
-                            .collect(toList());
+                .map(cart-> {
+                            CartDTO cartDTO = modelMapper.map(cart, CartDTO.class);
+                            List<ProductDTO> products = cart.getCartItems().stream().map(cartItem -> {
+                                ProductDTO productDTO = modelMapper.map(cartItem.getProduct(), ProductDTO.class);
+                                productDTO.setQuantity(cartItem.getQuantity());
+                                return productDTO;
+                            }).collect(Collectors.toList());
+
                      cartDTO.setProducts(products);
                      return cartDTO;
                 }).collect(toList());
