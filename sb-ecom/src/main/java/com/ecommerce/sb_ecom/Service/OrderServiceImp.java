@@ -98,9 +98,6 @@ public class OrderServiceImp implements OrderService{
 
         orderDTO.setAddressId(addressId);
 
-        //clear the cart
-
-        //send back the order summary
         return orderDTO;
     }
 }
