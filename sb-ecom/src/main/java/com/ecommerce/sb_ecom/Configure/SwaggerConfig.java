@@ -33,7 +33,7 @@ public class SwaggerConfig {
                         .description("This is a Spring Boot Project for eCommarce")
                         .license(new License().name("Apache 2.0").url("http://himanshu.com"))
                         .contact( new Contact()
-                                .name("Himanshu Kumar")
+                                .name("Himanshu Kumar Josi")
                                 .email("himanshukuma93079@gmail.com")
                                 .url("https://github.com/45himanshukumar")
                         )
