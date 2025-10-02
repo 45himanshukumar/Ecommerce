@@ -1,17 +1,20 @@
 package com.ecommerce.sb_ecom.Service;
 
 
+import com.ecommerce.sb_ecom.Configure.AppConstant;
 import com.ecommerce.sb_ecom.Exception.APIException;
 import com.ecommerce.sb_ecom.Exception.ResourseNotFoundException;
 import com.ecommerce.sb_ecom.Model.Cart;
 import com.ecommerce.sb_ecom.Model.Category;
 import com.ecommerce.sb_ecom.Model.Product;
+import com.ecommerce.sb_ecom.Model.User;
 import com.ecommerce.sb_ecom.Payload.CartDTO;
 import com.ecommerce.sb_ecom.Payload.ProductDTO;
 import com.ecommerce.sb_ecom.Payload.ProductResponse;
 import com.ecommerce.sb_ecom.Repositry.CartRepository;
 import com.ecommerce.sb_ecom.Repositry.CategoryRepository;
 import com.ecommerce.sb_ecom.Repositry.ProductRepository;
+import com.ecommerce.sb_ecom.util.AuthUtil;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +22,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
@@ -53,8 +60,15 @@ public class ProductServiceimp implements ProductService{
     @Value("${project.image}")
     private String path;
 
+    @Value("${image.base.url}")
+    private String imageBaseUrl;
+
+    @Autowired
+    AuthUtil authUtil;
+
+
     @Override
-    public ProductDTO addproduct(Long categoryId, ProductDTO productDTO) {
+    public ProductDTO addProduct(Long categoryId, ProductDTO productDTO) {
 
         Category  category= categoryRepository.findById(categoryId)
                 .orElseThrow(() -> new ResourseNotFoundException("Category","categoryId",categoryId));
@@ -90,11 +104,16 @@ public class ProductServiceimp implements ProductService{
                 : Sort.by(sortBy).descending();
         Pageable pageDetails= PageRequest.of(pageNumber,pageSize,sortByAndOrder);
         Page<Product> pageProducts=productRepository.findAll(pageDetails);
-
-         List<Product> products= pageProducts.getContent();
-             List<ProductDTO> productDTOS=   products.stream()
-                     .map(product -> modelMapper.map(product,ProductDTO.class))
-                     .toList();
+        //update
+        List<Product> products= pageProducts.getContent();
+        List<ProductDTO> productDTOS = products.stream()
+                .map(product -> {
+                    ProductDTO dto = modelMapper.map(product, ProductDTO.class);
+                    dto.setImage(constructImageUrl(product.getImage()));
+                    return dto;
+                })
+                .toList();
+        //
              if(products.isEmpty()){
                  throw  new APIException("Product not present");
              }
@@ -102,8 +121,8 @@ public class ProductServiceimp implements ProductService{
              productResponse.setContent(productDTOS);
              productResponse.setPageNumber(pageProducts.getNumber());
              productResponse.setPageSize(pageProducts.getSize());
-             productResponse.setTotalPage(pageProducts.getTotalPages());
-             productResponse.setTotalElement(pageProducts.getTotalPages());
+             productResponse.setTotalPages(pageProducts.getTotalPages());
+             productResponse.setTotalElements((long) pageProducts.getTotalPages());
              productResponse.setLastPage(pageProducts.isLast());
 
         return productResponse;
@@ -121,9 +140,15 @@ public class ProductServiceimp implements ProductService{
 
         List<Product> products= pageProducts.getContent();
          //List<Product> products=  productRepository.findByCategoryOrderByPriceAsc(category);
-        List<ProductDTO> productDTOS=   products.stream()
-                .map(product -> modelMapper.map(product,ProductDTO.class))
+        //update
+        List<ProductDTO> productDTOS = products.stream()
+                .map(product -> {
+                    ProductDTO dto = modelMapper.map(product, ProductDTO.class);
+                    dto.setImage(constructImageUrl(product.getImage()));
+                    return dto;
+                })
                 .toList();
+        //
         if(products.isEmpty()){
             throw new APIException(category.getCategoryName()+"Product not Found this categoy");
 
@@ -132,8 +157,8 @@ public class ProductServiceimp implements ProductService{
         productResponse.setContent(productDTOS);
         productResponse.setPageNumber(pageProducts.getNumber());
         productResponse.setPageSize(pageProducts.getSize());
-        productResponse.setTotalPage(pageProducts.getTotalPages());
-        productResponse.setTotalElement(pageProducts.getTotalPages());
+        productResponse.setTotalPages(pageProducts.getTotalPages());
+        productResponse.setTotalElements((long) pageProducts.getTotalPages());
         productResponse.setLastPage(pageProducts.isLast());
         return productResponse;
     }
@@ -147,9 +172,15 @@ public class ProductServiceimp implements ProductService{
         Pageable pageDetails= PageRequest.of(pageNumber,pageSize,sortByAndOrder);
         Page<Product> pageProducts=productRepository.findByProductNameLikeIgnoreCase('%'+Keyword+'%',pageDetails);
         List<Product> products= pageProducts.getContent();
-        List<ProductDTO> productDTOS=   products.stream()
-               .map(product -> modelMapper.map(product,ProductDTO.class))
+        //update
+        List<ProductDTO> productDTOS = products.stream()
+                .map(product -> {
+                    ProductDTO dto = modelMapper.map(product, ProductDTO.class);
+                    dto.setImage(constructImageUrl(product.getImage()));
+                    return dto;
+                })
                 .toList();
+        //
         if(products.isEmpty()){
             throw  new APIException("Product not Found with keyword"+ Keyword);
         }
@@ -157,8 +188,8 @@ public class ProductServiceimp implements ProductService{
         productResponse.setContent(productDTOS);
         productResponse.setPageNumber(pageProducts.getNumber());
         productResponse.setPageSize(pageProducts.getSize());
-        productResponse.setTotalPage(pageProducts.getTotalPages());
-        productResponse.setTotalElement(pageProducts.getTotalPages());
+        productResponse.setTotalPages(pageProducts.getTotalPages());
+        productResponse.setTotalElements((long) pageProducts.getTotalPages());
         productResponse.setLastPage(pageProducts.isLast());
         return productResponse;
 
@@ -226,7 +257,68 @@ public class ProductServiceimp implements ProductService{
         return  modelMapper.map(updatedProduct,ProductDTO.class);
 
     }
+    private String constructImageUrl(String imageName) {
+        return imageBaseUrl.endsWith("/") ? imageBaseUrl + imageName : imageBaseUrl + "/" + imageName;
+    }
+    @Override
+    public ProductResponse getAllProductsForAdmin(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
+        Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
 
+        Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
+        Page<Product> pageProducts = productRepository.findAll(pageDetails);
+
+        List<Product> products = pageProducts.getContent();
+
+        List<ProductDTO> productDTOS = products.stream()
+                .map(product -> {
+                    ProductDTO productDTO = modelMapper.map(product, ProductDTO.class);
+                    productDTO.setImage(constructImageUrl(product.getImage()));
+                    return productDTO;
+                })
+                .toList();
+
+        ProductResponse productResponse = new ProductResponse();
+        productResponse.setContent(productDTOS);
+        productResponse.setPageNumber(pageProducts.getNumber());
+        productResponse.setPageSize(pageProducts.getSize());
+        productResponse.setTotalElements(pageProducts.getTotalElements());
+        productResponse.setTotalPages(pageProducts.getTotalPages());
+        productResponse.setLastPage(pageProducts.isLast());
+        return productResponse;
+    }
+
+    @Override
+    public ProductResponse getAllProductsForSeller(Integer pageNumber, Integer pageSize, String sortBy, String sortOrder) {
+        Sort sortByAndOrder = sortOrder.equalsIgnoreCase("asc")
+                ? Sort.by(sortBy).ascending()
+                : Sort.by(sortBy).descending();
+
+        Pageable pageDetails = PageRequest.of(pageNumber, pageSize, sortByAndOrder);
+
+        User user = authUtil.loggedInUser();
+        Page<Product> pageProducts = productRepository.findByUser(user, pageDetails);
+
+        List<Product> products = pageProducts.getContent();
+
+        List<ProductDTO> productDTOS = products.stream()
+                .map(product -> {
+                    ProductDTO productDTO = modelMapper.map(product, ProductDTO.class);
+                    productDTO.setImage(constructImageUrl(product.getImage()));
+                    return productDTO;
+                })
+                .toList();
+
+        ProductResponse productResponse = new ProductResponse();
+        productResponse.setContent(productDTOS);
+        productResponse.setPageNumber(pageProducts.getNumber());
+        productResponse.setPageSize(pageProducts.getSize());
+        productResponse.setTotalElements(pageProducts.getTotalElements());
+        productResponse.setTotalPages(pageProducts.getTotalPages());
+        productResponse.setLastPage(pageProducts.isLast());
+        return productResponse;
+    }
 
 
 

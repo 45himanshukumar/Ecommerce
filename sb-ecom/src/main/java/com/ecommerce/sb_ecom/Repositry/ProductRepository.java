@@ -2,6 +2,7 @@ package com.ecommerce.sb_ecom.Repositry;
 
 import com.ecommerce.sb_ecom.Model.Category;
 import com.ecommerce.sb_ecom.Model.Product;
+import com.ecommerce.sb_ecom.Model.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,4 +13,5 @@ public interface ProductRepository extends JpaRepository<Product,Long> {
     Page<Product> findByCategoryOrderByPriceAsc(Category category, Pageable pageDetails);
 
     Page<Product> findByProductNameLikeIgnoreCase(String Keyword, Pageable pageDetails);
+    Page<Product> findByUser(User user, Pageable pageDetails);
 }

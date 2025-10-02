@@ -1,7 +1,6 @@
 package com.ecommerce.sb_ecom.Controller;
 
 import com.ecommerce.sb_ecom.Configure.AppConstant;
-import com.ecommerce.sb_ecom.Model.Category;
 import com.ecommerce.sb_ecom.Payload.CategoryDTO;
 import com.ecommerce.sb_ecom.Payload.CategoryResponce;
 import com.ecommerce.sb_ecom.Service.CategoryService;
@@ -19,11 +18,11 @@ import org.springframework.web.bind.annotation.*;
 
 
 @RestController
-public class  categorycontroller {
+public class CategoryController {
 
     private CategoryService categoryService;
    // private Long nextid=1L;
-    public categorycontroller(CategoryService categoryService) {
+    public CategoryController(CategoryService categoryService) {
         this.categoryService = categoryService;
     }
 
@@ -48,10 +47,10 @@ public class  categorycontroller {
                     responseCode = "500", description = "Internal Server Error"),
 
     })
-    @PostMapping("api/public/categories")
+    @PostMapping("api/admin/categories")
     public ResponseEntity<CategoryDTO> CreateCategory( @Valid @RequestBody CategoryDTO categoryDTO){
      //   category.setCategoryId(nextid++);
-        categoryDTO.setCategoryId(null);
+        //categoryDTO.setCategoryId(null);
        CategoryDTO savedCategoryDto= categoryService.createCategory(categoryDTO);
         return  new ResponseEntity<>(savedCategoryDto,HttpStatus.CREATED);
     }

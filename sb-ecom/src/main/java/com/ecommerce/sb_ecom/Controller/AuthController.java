@@ -1,29 +1,40 @@
 package com.ecommerce.sb_ecom.Controller;
 
+import com.ecommerce.sb_ecom.Configure.AppConstant;
+
 import com.ecommerce.sb_ecom.Model.AppRole;
 import com.ecommerce.sb_ecom.Model.Role;
 import com.ecommerce.sb_ecom.Model.User;
+
 import com.ecommerce.sb_ecom.Repositry.RoleRepository;
 import com.ecommerce.sb_ecom.Repositry.UserRepository;
-import com.ecommerce.sb_ecom.security.jwt.JwtUtils;
+import com.ecommerce.sb_ecom.Service.AuthService;
 
+
+import com.ecommerce.sb_ecom.security.jwt.JwtUtils;
 import com.ecommerce.sb_ecom.security.request.LoginRequest;
 import com.ecommerce.sb_ecom.security.request.SignupRequest;
 import com.ecommerce.sb_ecom.security.response.MessageResponse;
+
 import com.ecommerce.sb_ecom.security.response.UserInfoResponse;
 import com.ecommerce.sb_ecom.security.service.UserDetailsImpl;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpHeaders;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
-
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -49,7 +60,7 @@ public class AuthController {
 
 
       @Autowired
-    PasswordEncoder encoder;
+      PasswordEncoder encoder;
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
         Authentication authentication;
@@ -73,7 +84,7 @@ public class AuthController {
                 .map(item -> item.getAuthority())
                 .collect(Collectors.toList());
 
-        UserInfoResponse response = new UserInfoResponse(userDetails.getId(), userDetails.getUsername(), roles,jwtCookie.toString());
+        UserInfoResponse response = new UserInfoResponse(userDetails.getId(), userDetails.getUsername(), roles,jwtCookie.toString(), jwtCookie.toString());
 
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,
                 jwtCookie.toString())
@@ -159,6 +170,54 @@ public class AuthController {
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,
                         cookie.toString())
                 .body(new MessageResponse("You have been sing Out"));
+    }
+@Autowired
+AuthService authService;
+////
+//    @PostMapping("/signin")
+//    public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
+//        AuthenticationResult result = authService.login(loginRequest);
+//        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,
+//                        result.getJwtCookie().toString())
+//                .body(result.getResponse());
+//    }
+//
+//    @PostMapping("/signup")
+//    public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signUpRequest) {
+//        return authService.register(signUpRequest);
+//    }
+//
+//    @GetMapping("/username")
+//    public String currentUserName(Authentication authentication){
+//        if (authentication != null)
+//            return authentication.getName();
+//        else
+//            return "";
+//    }
+//
+//
+//    @GetMapping("/user")
+//    public ResponseEntity<?> getUserDetails(Authentication authentication){
+//        return ResponseEntity.ok().body(authService.getCurrentUserDetails(authentication));
+//    }
+//
+//    @PostMapping("/signout")
+//    public ResponseEntity<?> signoutUser(){
+//        ResponseCookie cookie = authService.logoutUser();
+//        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE,
+//                        cookie.toString())
+//                .body(new MessageResponse("You've been signed out!"));
+//    }
+
+    @GetMapping("/sellers")
+    public ResponseEntity<?> getAllSellers(
+            @RequestParam(name = "pageNumber", defaultValue = AppConstant.PAGE_NUMBER, required = false) Integer pageNumber) {
+
+        Sort sortByAndOrder = Sort.by(AppConstant.SORT_USERS_BY).descending();
+        Pageable pageDetails = PageRequest.of(pageNumber ,
+                Integer.parseInt(AppConstant.PAGE_SIZE), sortByAndOrder);
+
+        return ResponseEntity.ok(authService.getAllSellers(pageDetails));
     }
 
 }

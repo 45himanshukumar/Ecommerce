@@ -7,14 +7,14 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
-public class ProductResponse {
-
-    private List<ProductDTO> content;
+@AllArgsConstructor
+public class UserResponse {
+    private List<UserDTO> content;
     private Integer pageNumber;
     private Integer pageSize;
     private Long totalElements;
     private Integer totalPages;
     private boolean lastPage;
+
 }

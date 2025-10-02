@@ -10,9 +10,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CategoryDTO {
-    @Schema(description = "Category ID " )
+    //@Schema(description = "Category ID " )
     private Long CategoryId;
-    @Schema(description = "Category name foe category you wish to create")
+   // @Schema(description = "Category name foe category you wish to create")
     private String CategoryName;
 
 }

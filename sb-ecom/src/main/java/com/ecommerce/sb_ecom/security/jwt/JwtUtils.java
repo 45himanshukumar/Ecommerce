@@ -29,39 +29,39 @@ public class JwtUtils {
     @Value("${spring.app.jwtExpirationMs}")
     private int jwtExpirationMs;
     @Value("${spring.ecom.app.jwtCookieName}")
-    private String jwtCookie;
+    private String jwtCookieName;
 
 //
-    public String getJwtFromCookies(HttpServletRequest request){
-        Cookie cookie= WebUtils.getCookie(request,jwtCookie);
-        if(cookie!=null){
-            System.out.println("Cookie" + cookie.getValue());
-            return cookie.getValue();
-        }
-        else{
-            return null;
-        }
+public String getJwtFromCookies(HttpServletRequest request) {
+    Cookie cookie = WebUtils.getCookie(request, jwtCookieName);
+    if (cookie != null) {
+        return cookie.getValue();
+    } else {
+        return null;
     }
-    public String getJwtFromHeader(HttpServletRequest request){
-        String bearerToken= request.getHeader("Authorization");
-       if(bearerToken!=null&& bearerToken.startsWith("Bearer")){
-           return bearerToken.substring(7);
-       }
-       return null;
+}
+
+    public String getJwtFromHeader(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
     }
 
-     public ResponseCookie generateJwtCookie(UserDetailsImpl principal){
-          String jwt=generateTokenFromUsername(principal.getUsername());
-          ResponseCookie cookie= ResponseCookie.from(jwtCookie,jwt)
-                  .path("/api")
-                  .maxAge(24*60*60)
-                  .httpOnly(false)
-                  .build();
-          return cookie;
-     }
-    public ResponseCookie getCleanJwtCookie(){
+    public ResponseCookie generateJwtCookie(UserDetailsImpl userPrincipal) {
+        String jwt = generateTokenFromUsername(userPrincipal.getUsername());
+        return ResponseCookie.from("springBootEcom", jwt)
+                .path("/api")
+                .maxAge(24 * 60 * 60)
+                .httpOnly(false)  // for Postman testing
+                .secure(false)
+                .sameSite("Lax")  // ✅ important for sending cookies correctly
+                .build();
+    }
 
-        ResponseCookie cookie= ResponseCookie.from(jwtCookie,null)
+    public ResponseCookie getCleanJwtCookie() {
+        ResponseCookie cookie = ResponseCookie.from(jwtCookieName, null)
                 .path("/api")
                 .build();
         return cookie;
@@ -89,7 +89,6 @@ public class JwtUtils {
 
     public boolean validateJwtToken(String authToken) {
         try {
-            System.out.println("Validate");
             Jwts.parser().verifyWith((SecretKey) key()).build().parseSignedClaims(authToken);
             return true;
         } catch (MalformedJwtException e) {

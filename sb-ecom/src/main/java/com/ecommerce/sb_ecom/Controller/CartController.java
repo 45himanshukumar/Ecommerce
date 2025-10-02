@@ -2,6 +2,7 @@ package com.ecommerce.sb_ecom.Controller;
 
 import com.ecommerce.sb_ecom.Model.Cart;
 import com.ecommerce.sb_ecom.Payload.CartDTO;
+import com.ecommerce.sb_ecom.Payload.CartItemDTO;
 import com.ecommerce.sb_ecom.Repositry.CartRepository;
 import com.ecommerce.sb_ecom.Service.CartService;
 import com.ecommerce.sb_ecom.util.AuthUtil;
@@ -25,6 +26,12 @@ public class CartController {
     @Autowired
     CartRepository cartRepository;
 
+    @PostMapping("/cart/create")
+    public ResponseEntity<String> createOrUpdateCart(@RequestBody List<CartItemDTO> cartItems){
+        String response = cartService.createOrUpdateCartWithItems(cartItems);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
     @PostMapping("/carts/products/{productId}/quantity/{quantity}")
     public ResponseEntity<CartDTO> addProductToCart(@PathVariable Long productId,@PathVariable Integer quantity){
          CartDTO cartDTO= cartService.addProductToCart(productId,quantity);
@@ -36,7 +43,7 @@ public class CartController {
         List<CartDTO> cartDTOS= cartService.getAllCarts();
         return new ResponseEntity<List<CartDTO>>(cartDTOS,HttpStatus.OK);
     }
-    @GetMapping("/carts/user/cart")
+    @GetMapping("/carts/users/cart")
     public ResponseEntity<CartDTO>getCartById(){
         String emailId=authUtil.loggedInEmail();
         Cart cart=cartRepository.findCartByEmail(emailId);
@@ -44,12 +51,12 @@ public class CartController {
         CartDTO cartDTO= cartService.getCart(emailId,cartId);
         return new  ResponseEntity<CartDTO>(cartDTO,HttpStatus.OK);
     }
-    @PutMapping("/cart/product/{productId}/quantity/{operation}")
+    @PutMapping("/cart/products/{productId}/quantity/{operation}")
     public ResponseEntity<CartDTO>updateCartProduct(@PathVariable Long productId,@PathVariable String operation){
           CartDTO cartDTO= cartService.updateProductQuantityCart(productId,operation.equalsIgnoreCase("delete")? -1:1);
           return new ResponseEntity<CartDTO>(cartDTO,HttpStatus.OK);
     }
-    @DeleteMapping("/cart/{cartId}/product/{productId}")
+    @DeleteMapping("/carts/{cartId}/product/{productId}")
     public ResponseEntity<String>deleteProductFromCart(@PathVariable Long cartId,@PathVariable Long productId){
         String status  =cartService.deleteProductFromCart(cartId,productId);
          return new ResponseEntity<String>(status,HttpStatus.OK);
